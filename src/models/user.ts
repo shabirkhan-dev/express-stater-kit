@@ -1,4 +1,4 @@
-import crypto from "crypto";
+import crypto from "node:crypto";
 import mongoose, { type Document, type Model, Schema } from "mongoose";
 
 interface UserPreferences {
@@ -61,7 +61,7 @@ const userSchema = new Schema<UserDocument, UserModel>({
 // Pre-save middleware to hash password
 userSchema.pre('save', async function(next) {
   // Only hash the password if it has been modified (or is new)
-  if (!this.isModified('password')) return next();
+  if  (!this.isModified('password')) { return next(); }
 
   try {
     // Hash password using crypto
@@ -76,7 +76,7 @@ userSchema.pre('save', async function(next) {
 userSchema.statics.hashPassword = async (password: string): Promise<string> => {
   // Use crypto to create a salt and hash
   const salt = crypto.randomBytes(16).toString('hex');
-  const hash = crypto.pbkdf2Sync(
+  const hash =  await crypto.pbkdf2Sync(
     password,
     salt,
     1000,  // iterations
@@ -91,7 +91,7 @@ userSchema.statics.hashPassword = async (password: string): Promise<string> => {
 userSchema.methods.comparePassword = async function(candidatePassword: string): Promise<boolean> {
   const [salt, originalHash] = this.password.split(':');
 
-  const candidateHash = crypto.pbkdf2Sync(
+  const candidateHash = await crypto.pbkdf2Sync(
     candidatePassword,
     salt,
     1000,
@@ -104,16 +104,13 @@ userSchema.methods.comparePassword = async function(candidatePassword: string): 
 
 // JSON transformation
 userSchema.set('toJSON', {
-  transform: (_doc, ret) => {
-    delete ret.password;
-    delete ret.userPreferences?.twoFactorSecret;
-    return ret;
-  transform: (_doc, ret) => {
+
+  transform: (_doc, ret):UserDocument => {
     const { password, userPreferences, ...rest } = ret;
     const { twoFactorSecret, ...safePreferences } = userPreferences || {};
     return { ...rest, userPreferences: safePreferences };
   }
-  }
+
 });
 
 export const UserModel = mongoose.model<UserDocument, UserModel>("User", userSchema);
