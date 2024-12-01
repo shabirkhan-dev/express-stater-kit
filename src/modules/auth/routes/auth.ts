@@ -12,5 +12,6 @@ router.post(
   authController.register
 );
 
+
 // biome-ignore lint/style/noDefaultExport: <explanation>
 export default router;
