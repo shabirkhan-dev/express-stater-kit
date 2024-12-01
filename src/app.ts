@@ -1,4 +1,5 @@
 import { errorHandler, notFound } from '@/errors';
+import AuthRoute from '@/modules/auth/routes/auth'
 import { createHttpLogger, createLogger } from '@/utils/loger';
 import cors from 'cors'
 import express from 'express'
@@ -24,9 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // ℹ️ Routes will be added here
 app.get('/health', (_req, res) => { res.send('OK') });
+app.use('/api/auth', AuthRoute);
 
-
-// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
